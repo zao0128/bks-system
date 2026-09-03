@@ -546,8 +546,16 @@ function switchPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
 
-  if (page === 'admin' && isAdminLoggedIn) {
-    loadData();
+  if (page === 'admin') {
+    // 每次进入管理后台都检查登录状态
+    if (isAdminLoggedIn) {
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('admin-content').style.display = 'block';
+      loadData();
+    } else {
+      document.getElementById('auth-gate').style.display = 'block';
+      document.getElementById('admin-content').style.display = 'none';
+    }
   }
 }
 
