@@ -862,12 +862,35 @@ function adminLogin() {
 async function loadData() {
   if (supabaseClient) {
     try {
+      // 1. 查询提交记录（主表）
       const { data, error } = await supabaseClient
         .from('bks_submissions')
-        .select('*, bks_materials(*)')
+        .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
       localData = data || [];
+
+      // 2. 单独批量查询材料记录（避免个别环境关联查询 bks_materials(*) 不返回）
+      if (localData.length > 0) {
+        const ids = localData.map(s => s.id);
+        const { data: mats, error: matsError } = await supabaseClient
+          .from('bks_materials')
+          .select('*')
+          .in('submission_id', ids);
+        if (matsError) throw matsError;
+        // 按 submission_id 挂到对应提交下
+        const matsBySub = {};
+        (mats || []).forEach(m => {
+          if (!matsBySub[m.submission_id]) matsBySub[m.submission_id] = [];
+          matsBySub[m.submission_id].push(m);
+        });
+        localData.forEach(s => {
+          s.materials = matsBySub[s.id] || [];
+        });
+      } else {
+        localData.forEach(s => { s.materials = []; });
+      }
+
       updateStats();
       renderTable();
       renderSummary();
