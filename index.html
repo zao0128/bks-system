@@ -926,6 +926,9 @@ async function loadData() {
       console.info('[数据源] 云端模式，提交记录 ' + localData.length + ' 条，材料记录 ' + totalMats + ' 份');
       updateDataSourceBadge('云端');
 
+      // 云端数据联动覆盖本地缓存：云端删了缓存也同步；云端为空则清空缓存
+      localStorage.setItem('bks_local_data', JSON.stringify(localData));
+
       updateStats();
       renderTable();
       renderSummary();
